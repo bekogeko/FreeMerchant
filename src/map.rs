@@ -25,12 +25,12 @@ pub fn setup_camera(mut commands: Commands) {
 pub fn spawn_city(
     commands: &mut Commands,
     asset_server: &AssetServer,
-    name: impl Into<String>,
+    city: City,
     position: Vec2,
 ) -> CityNode {
     let entity = commands
         .spawn((
-            City::new(name),
+            city,
             MapPosition(position),
             Sprite {
                 // image: asset_server.load("city.png"),

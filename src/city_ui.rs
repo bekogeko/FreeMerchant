@@ -13,7 +13,7 @@ struct CityDetailsPanel;
 struct CityNameText;
 
 #[derive(Component)]
-struct CityRoadsText;
+struct CityDetailsText;
 
 pub struct CityUIPlugin;
 
@@ -66,7 +66,7 @@ fn spawn_city_details_panel(mut commands: Commands) {
                     ..default()
                 },
                 TextColor(Color::srgb(0.82, 0.82, 0.76)),
-                CityRoadsText,
+                CityDetailsText,
             ),
         ],
     ));
@@ -148,8 +148,8 @@ fn ui_node_is_visible(
 fn update_city_details(
     selected_city: Res<SelectedCity>,
     mut panel_visibility: Single<&mut Visibility, With<CityDetailsPanel>>,
-    mut name_text: Single<&mut Text, (With<CityNameText>, Without<CityRoadsText>)>,
-    mut roads_text: Single<&mut Text, (With<CityRoadsText>, Without<CityNameText>)>,
+    mut name_text: Single<&mut Text, (With<CityNameText>, Without<CityDetailsText>)>,
+    mut details_text: Single<&mut Text, (With<CityDetailsText>, Without<CityNameText>)>,
     cities: Query<&City>,
     roads: Query<&Road>,
 ) {
@@ -165,7 +165,43 @@ fn update_city_details(
 
     **panel_visibility = Visibility::Visible;
     name_text.0.clone_from(&city.name);
-    roads_text.0 = road_list_text(selected_city, &roads, &cities);
+    details_text.0 = city_details_text(city, selected_city, &roads, &cities);
+}
+
+fn city_details_text(
+    city: &City,
+    selected_city: Entity,
+    roads: &Query<&Road>,
+    cities: &Query<&City>,
+) -> String {
+    let mut text = format!(
+        "Population: {}\n\n{}",
+        city.population,
+        extractor_list_text(city)
+    );
+    text.push_str("\n\n");
+    text.push_str(&road_list_text(selected_city, roads, cities));
+    text
+}
+
+fn extractor_list_text(city: &City) -> String {
+    let mut text = String::from("Extractors");
+
+    if city.extractors.is_empty() {
+        text.push_str("\nNo extractors yet");
+        return text;
+    }
+
+    for extractor in &city.extractors {
+        text.push_str(&format!(
+            "\n- {}: {} {}",
+            extractor.name,
+            extractor.output,
+            extractor.commodity.name()
+        ));
+    }
+
+    text
 }
 
 fn road_list_text(selected_city: Entity, roads: &Query<&Road>, cities: &Query<&City>) -> String {
